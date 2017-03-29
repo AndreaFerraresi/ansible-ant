@@ -4,27 +4,9 @@
 #   Fail the play if it runs on an unsupported platform.
 - name: Assert platform is supported
   tags: ant
-  assert: { that: "ansible_os_family in ['Debian', 'Suse', 'RedHat']" }
-
-
-- name: Install Ant download directory (local)
-  tags: ant
-  sudo: no
-  local_action: file
-    state=directory
-    mode=0755
-    dest={{ ansible_data_path }}
-
-
-- name: Download Ant (local)
-  tags: ant
-  sudo: no
-  local_action: get_url
-    dest={{ ansible_data_path }}/{{ ant_redis_filename }}
-    url={{ ant_mirror }}/{{ ant_redis_filename }}
-    mode=0644
-#    sha512sum={{ ant_redis_sha512sum }}
-
+  assert:
+    that:
+      - ansible_os_family in ['Archlinux', 'Debian', 'RedHat', 'Suse']
 
 - name: Install Ant installation directory
   tags: ant
@@ -39,9 +21,9 @@
 - name: Install Ant
   tags: ant
   unarchive:
-    src={{ ansible_data_path }}/{{ ant_redis_filename }}
-    dest={{ ant_install_dir }}
-
+    src: "{{ ant_url }}/{{ant_filename }}"
+    dest: "{{ ant_install_dir }}"
+    remote_src: true
 
 - name: Install Ant bin directory
   tags: ant
@@ -52,15 +34,16 @@
     mode=0755
     dest={{ ant_bin_path }}
 
-
 - name: Install Ant binary
   tags: ant
   file:
     state=link
     force=true
-    src={{ ant_install_dir }}/apache-ant-{{ ant_version }}/bin/ant
+    src={{ ant_install_dir }}/{{ant_filename|splitext}}[0]/bin/ant
     dest={{ ant_bin_path }}/ant
 
-# install antlibs
-- include: antlib.yml
+- name: download antlibs
+  get_url: url='{{ item.url }}' dest='{{ ant_install_dir }}/apache-ant-{{ ant_version }}/lib/{{ item.name}}-{{ item.version }}.jar'
+    with_items:
+      - "{{ antlib_jars }}"
   when: antlib_jars is defined

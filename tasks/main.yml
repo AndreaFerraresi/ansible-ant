@@ -43,7 +43,9 @@
     dest={{ ant_bin_path }}/ant
 
 - name: download antlibs
-  get_url: url='{{ item.url }}' dest='{{ ant_install_dir }}/apache-ant-{{ ant_version }}/lib/{{ item.name}}-{{ item.version }}.jar'
-    with_items:
-      - "{{ antlib_jars }}"
-  when: antlib_jars is defined
+  get_url:
+    url: "{{ item.url }}"
+    dest: "{{ant_install_dir}}/{{ant_lib_path}}"
+  with_items:
+    - "{{ antlib_jars }}"
+
